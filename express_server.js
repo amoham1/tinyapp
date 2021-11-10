@@ -47,8 +47,17 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let longUrl = req.body.longURL;  // Log the POST request body to the console
+  let shortUrl = generateRandomString();
+  //adds a short url (random generated) and long url to the database
+  urlDatabase[shortUrl]=longUrl;
+  const templateVars = {shortURL :shortUrl, longURL:longUrl};
+  res.render("urls_show", templateVars); 
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  // const longURL = ...
+  res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL",(req, res)=>{
