@@ -8,10 +8,15 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+      longURL: "https://www.tsn.ca",
+      userID: "aJ48lW"
+  },
+  i3BoGr: {
+      longURL: "https://www.google.ca",
+      userID: "aJ48lW"
+  }
 };
-
 // users and password for accounts that register
 const users = { 
   "userRandomID": {
@@ -33,6 +38,17 @@ const emailChecker = function(email) {
     }
   }
   return null;
+};
+
+//which returns the URLs where the userID is equal to the id of the currently logged-in user.
+const urlsForUser = function(id, urlDatabase) {
+  const userUrls = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userUrls[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userUrls;
 };
 
 //creates random string for short url and cookies
@@ -63,17 +79,20 @@ app.listen(PORT, () => {
 });
 
 app.get("/urls", (req, res) => {
-  let user_id = req.cookies["user_id"]
+  const user_id = req.cookies["user_id"]
   if (!user_id) {
-    res.redirect("/login")
+   return res.status(401).send("You must be logged in with a valid account to see short URLs.");
   }
-  let user = users[user_id];
+  const user = users[user_id];
   const templateVars = { urls: urlDatabase, user: user };
   res.render("urls_index", templateVars);
 });
+
 app.get("/urls/new", (req, res) => {
-  let user_id = req.cookies["user_id"]
-  let user = users[user_id];
+  let user_id = req.cookies["user_id"];
+  if (!user_id) {
+    return res.redirect("/login");
+  }
   const templateVars = {
     user: users[req.cookies["user_id"]]
   };
@@ -86,32 +105,57 @@ app.post("/urls", (req, res) => {
   let longUrl = req.body.longURL;  // Log the POST request body to the console
   let shortUrl = generateRandomString();
   //adds a short url (random generated) and long url to the database
-  urlDatabase[shortUrl]=longUrl;
+  urlDatabase[shortUrl]={
+    longURL : longUrl,
+    userID : req.cookies["user_id"]
+  };
   const templateVars = {
     shortURL :shortUrl, 
-    longURL:longUrl,
-    user: users[req.cookies["user_id"]]
+    longURL : longUrl,
+    user : users[req.cookies["user_id"]]
   };
-  res.render("urls_show", templateVars); 
+  return res.render("urls_show", templateVars); 
+//res.status(401).send("You must be logged in with a valid account to see short URLs.");
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  // const longURL = ...
-  res.redirect(longURL);
-});
+// app.get("/u/:shortURL", (req, res) => {
+//   // const longURL = ...
+//   res.redirect(longURL);
+// });
 
 // sends user to the edit url page /urls/SAKDAL
 app.get("/urls/:shortURL",(req, res)=>{
+  let user_id = req.cookies["user_id"]
+  if (!user_id) {
+   return res.status(401).send("You must be logged in with a valid account to see short URLs.");
+  }
+  if(!urlDatabase[req.params.shortURL]){
+    return res.status(400).send("This url doesn't exist");
+  }
+  const myUrls = urlsForUser(user_id, urlDatabase);
+  if(Object.keys(myUrls).length < 1) { 
+    return res.status(401).send("you are not permitted to edit");
+   }
   const templateVars = {
     shortURL : req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]]
   };
+  
   res.render("urls_show", templateVars);
 });
 
 // deletes a url on url page 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  let user_id = req.cookies["user_id"]
+  if (!user_id) {
+   return res.status(401).send("You must be logged in with a valid account to see short URLs.");
+  }
+  //doesnt allow other user to delete
+  const myUrls = urlsForUser(user_id, urlDatabase);
+  if(Object.keys(myUrls).length < 1) { 
+    return res.status(401).send("you are not permitted to delete");
+   }
   delete urlDatabase[req.params.shortURL]
   res.redirect("/urls")
 });
@@ -119,9 +163,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // edit a url on url page
 app.post("/urls/:shortURL", (req, res) => {
   let user_id = req.cookies["user_id"]
-  let user = users[user_id];
+  if (!user_id) {
+   return res.status(401).send("You must be logged in with a valid account to see short URLs.");
+  }
+  const myUrls = urlsForUser(user_id, urlDatabase);
+  if(Object.keys(myUrls).length < 1) { 
+    return res.status(401).send("you are not permitted to edit");
+   }
   const updateUrl = req.body.update_Urls;
-  urlDatabase[req.params.shortURL] = updateUrl;
+  urlDatabase[req.params.shortURL].longURL = updateUrl;
   res.redirect("/urls")
 });
 
@@ -135,7 +185,7 @@ app.post("/urls/:shortURL", (req, res) => {
 // logout in the header
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id')
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 // registration page
