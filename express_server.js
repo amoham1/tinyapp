@@ -57,6 +57,16 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+//short url link for different websites
+app.get("/u/:shortURL", (req, res) => {
+  if (!urlDatabase[req.params.shortURL]){
+    res.status(404).send("The short url you have attempted to access does not exist")
+    return;
+  }
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(longURL);
+});
+
 app.get("/urls", (req, res) => {
   const user_id = req.session.user_id;
   if (!user_id) {
