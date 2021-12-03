@@ -73,7 +73,10 @@ app.get("/urls", (req, res) => {
     return res.status(401).send("You must be logged in with a valid account to see short URLs.");
   }
   const user = users[user_id];
-  const templateVars = { urls: urlDatabase, user: user };
+  const templateVars = { 
+    urls: urlsForUser(user_id, urlDatabase), 
+    user: user 
+  };
   res.render("urls_index", templateVars);
 });
 
