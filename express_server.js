@@ -57,7 +57,11 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+<<<<<<< HEAD
 //THIS IS THE SHORT URL PATH THAT REDIRECTS YOU TO THE LONG URL WEBPAGE
+=======
+//short url link for different websites
+>>>>>>> 47b1d1aaac19bf384809b29d5b8e6318fcc30cf9
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]){
     res.status(404).send("The short url you have attempted to access does not exist")
