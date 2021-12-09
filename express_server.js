@@ -42,7 +42,7 @@ const users = {
 
 // on link localhost:8080 shows hello
 app.get("/", (req, res) => {
-  res.send("Hello to TinyApp please code this link to use webpage http://localhost:8080/register ");
+  res.redirect("login")
 });
 // on link localhost:8080/urls.json shows object
 app.get("/urls.json", (req, res) => {
@@ -57,7 +57,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//short url link for different websites
+//THIS IS THE SHORT URL PATH THAT REDIRECTS YOU TO THE LONG URL WEBPAGE
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]){
     res.status(404).send("The short url you have attempted to access does not exist")
